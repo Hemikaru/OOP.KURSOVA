@@ -1,6 +1,5 @@
 import sqlite3
 
-
 DB_NAME = "data.db"
 
 

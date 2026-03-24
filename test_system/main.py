@@ -226,7 +226,7 @@ class GUIRunner(TestRunner):
 
         tk.Label(frame, text=f"Тест: {self.test_obj.title}", font=("Segoe UI", 11)).pack(anchor="w", pady=4)
         tk.Label(frame, text=f"Студент: {self.current_user.username}", font=("Segoe UI", 11)).pack(anchor="w", pady=4)
-        tk.Label(frame, text=f"Правильних відповідей: {score} / {total}", font=("Segoe UI", 11)).pack(anchor="w", pady=4)
+        tk.Label(frame, text=f"Набрано балів: {score} / {total}", font=("Segoe UI", 11)).pack(anchor="w", pady=4)
         tk.Label(frame, text=f"Успішність: {percent}%", font=("Segoe UI", 11)).pack(anchor="w", pady=4)
         tk.Label(frame, text=f"Час проходження: {duration} сек.", font=("Segoe UI", 11)).pack(anchor="w", pady=4)
 
@@ -318,22 +318,11 @@ class TestSystemApp:
         ).pack(anchor="w", padx=16, pady=(16, 12))
 
         self.btn_create_test = ttk.Button(sidebar, text="Створити тест", command=self.open_create_test_window)
-        self.btn_create_test.pack(fill="x", padx=16, pady=6)
-
         self.btn_add_question = ttk.Button(sidebar, text="Додати питання", command=self.open_add_question_window)
-        self.btn_add_question.pack(fill="x", padx=16, pady=6)
-
         self.btn_manage_questions = ttk.Button(sidebar, text="Переглянути / редагувати питання", command=self.open_questions_window)
-        self.btn_manage_questions.pack(fill="x", padx=16, pady=6)
-
         self.btn_start_test = ttk.Button(sidebar, text="Пройти тест", command=self.start_selected_test)
-        self.btn_start_test.pack(fill="x", padx=16, pady=6)
-
         self.btn_results = ttk.Button(sidebar, text="Історія результатів", command=self.open_results_window)
-        self.btn_results.pack(fill="x", padx=16, pady=6)
-
         self.btn_refresh = ttk.Button(sidebar, text="Оновити список", command=self.load_tests)
-        self.btn_refresh.pack(fill="x", padx=16, pady=6)
 
         self.info_box = tk.Label(
             sidebar,
@@ -391,23 +380,19 @@ class TestSystemApp:
         self.tree.bind("<<TreeviewSelect>>", self.on_select_test)
 
     def update_role_ui(self):
-        if self.current_user is None:
-            self.btn_create_test.pack_forget()
-            self.btn_add_question.pack_forget()
-            self.btn_manage_questions.pack_forget()
-            self.btn_start_test.pack_forget()
-            self.btn_results.pack_forget()
-            self.btn_refresh.pack_forget()
+        for btn in (
+            self.btn_create_test,
+            self.btn_add_question,
+            self.btn_manage_questions,
+            self.btn_start_test,
+            self.btn_results,
+            self.btn_refresh,
+        ):
+            btn.pack_forget()
 
+        if self.current_user is None:
             self.info_box.config(text="Увійди в систему, щоб побачити доступні дії.")
             return
-
-        self.btn_create_test.pack_forget()
-        self.btn_add_question.pack_forget()
-        self.btn_manage_questions.pack_forget()
-        self.btn_start_test.pack_forget()
-        self.btn_results.pack_forget()
-        self.btn_refresh.pack_forget()
 
         if self.current_user.role == "admin":
             self.btn_create_test.pack(fill="x", padx=16, pady=6)
@@ -415,6 +400,7 @@ class TestSystemApp:
             self.btn_manage_questions.pack(fill="x", padx=16, pady=6)
             self.btn_results.pack(fill="x", padx=16, pady=6)
             self.btn_refresh.pack(fill="x", padx=16, pady=6)
+
             self.info_box.config(
                 text="Режим адміністратора:\n- створення тестів\n- додавання питань\n- редагування і видалення\n- перегляд результатів"
             )
@@ -423,6 +409,7 @@ class TestSystemApp:
             self.btn_start_test.pack(fill="x", padx=16, pady=6)
             self.btn_results.pack(fill="x", padx=16, pady=6)
             self.btn_refresh.pack(fill="x", padx=16, pady=6)
+
             self.info_box.config(
                 text="Режим студента:\n- вибір тесту\n- проходження тесту\n- перегляд історії результатів"
             )
@@ -496,10 +483,7 @@ class TestSystemApp:
             return None
 
         values = self.tree.item(selected[0], "values")
-        return {
-            "id": int(values[0]),
-            "title": values[1]
-        }
+        return {"id": int(values[0]), "title": values[1]}
 
     def open_create_test_window(self):
         proxy = TestProxy(self.current_user)
@@ -571,11 +555,7 @@ class TestSystemApp:
         scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
 
         scroll_frame = tk.Frame(canvas)
-
-        scroll_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
+        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 
         canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
@@ -606,13 +586,7 @@ class TestSystemApp:
 
         difficulty_var = tk.StringVar(value="medium")
         ttk.Label(row, text="Складність:").pack(side="left")
-        ttk.Combobox(
-            row,
-            textvariable=difficulty_var,
-            values=["easy", "medium", "hard"],
-            width=10,
-            state="readonly"
-        ).pack(side="left", padx=10)
+        ttk.Combobox(row, textvariable=difficulty_var, values=["easy", "medium", "hard"], width=10, state="readonly").pack(side="left", padx=10)
 
         options_frame = tk.LabelFrame(frame, text="Варіанти відповідей (single)")
         options_frame.pack(fill="x", pady=10)
@@ -797,11 +771,7 @@ class TestSystemApp:
 
         question_map = {}
         for q in questions:
-            item_id = tree.insert(
-                "",
-                "end",
-                values=(q.id, q.q_type, q.points, q.difficulty, q.correct, q.text)
-            )
+            item_id = tree.insert("", "end", values=(q.id, q.q_type, q.points, q.difficulty, q.correct, q.text))
             question_map[item_id] = q
 
         buttons_frame = tk.Frame(win, padx=16, pady=10)
@@ -824,10 +794,7 @@ class TestSystemApp:
 
             question = question_map[selected[0]]
 
-            confirm = messagebox.askyesno(
-                "Підтвердження",
-                f"Видалити питання ID {question.id}?"
-            )
+            confirm = messagebox.askyesno("Підтвердження", f"Видалити питання ID {question.id}?")
             if not confirm:
                 return
 
@@ -841,11 +808,7 @@ class TestSystemApp:
             question_map.clear()
 
             for q in fresh_questions:
-                item_id = tree.insert(
-                    "",
-                    "end",
-                    values=(q.id, q.q_type, q.points, q.difficulty, q.correct, q.text)
-                )
+                item_id = tree.insert("", "end", values=(q.id, q.q_type, q.points, q.difficulty, q.correct, q.text))
                 question_map[item_id] = q
 
         ttk.Button(buttons_frame, text="Редагувати", command=edit_selected).pack(side="right", padx=6)
@@ -866,11 +829,7 @@ class TestSystemApp:
         scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
 
         scroll_frame = tk.Frame(canvas)
-
-        scroll_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
+        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 
         canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
@@ -902,13 +861,7 @@ class TestSystemApp:
 
         difficulty_var = tk.StringVar(value=question.difficulty)
         ttk.Label(row, text="Складність:").pack(side="left")
-        ttk.Combobox(
-            row,
-            textvariable=difficulty_var,
-            values=["easy", "medium", "hard"],
-            width=10,
-            state="readonly"
-        ).pack(side="left", padx=10)
+        ttk.Combobox(row, textvariable=difficulty_var, values=["easy", "medium", "hard"], width=10, state="readonly").pack(side="left", padx=10)
 
         options_frame = tk.LabelFrame(frame, text="Варіанти відповідей (single)")
         options_frame.pack(fill="x", pady=10)
@@ -1097,11 +1050,7 @@ class TestSystemApp:
         scrollbar.pack(side="right", fill="y")
 
         for row in get_results():
-            tree.insert(
-                "",
-                "end",
-                values=(row[1], row[2], row[3], row[4], row[5], row[6], row[7])
-            )
+            tree.insert("", "end", values=(row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
 
 
 def main():

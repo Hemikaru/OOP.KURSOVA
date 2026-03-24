@@ -1,6 +1,7 @@
 import json
 from database import get_conn
-from models import Test, Question
+from models import Test
+from factory import QuestionFactory
 
 
 def create_test(title: str):
@@ -8,6 +9,7 @@ def create_test(title: str):
     cur = conn.cursor()
 
     cur.execute("INSERT INTO tests(title) VALUES(?)", (title,))
+
     conn.commit()
     conn.close()
 
@@ -70,6 +72,7 @@ def get_questions(test_id: int):
         """,
         (test_id,)
     )
+
     rows = cur.fetchall()
     conn.close()
 
@@ -77,7 +80,7 @@ def get_questions(test_id: int):
     for row in rows:
         options = json.loads(row[4]) if row[4] else []
         questions.append(
-            Question(
+            QuestionFactory.create_question(
                 question_id=row[0],
                 test_id=row[1],
                 text=row[2],
@@ -89,6 +92,7 @@ def get_questions(test_id: int):
                 explanation=row[8]
             )
         )
+
     return questions
 
 
@@ -126,11 +130,22 @@ def get_results():
         LEFT JOIN tests t ON r.test_id = t.id
         ORDER BY r.id DESC
     """)
-    rows = cur.fetchall()
 
+    rows = cur.fetchall()
     conn.close()
-    return rows 
-def update_question(question_id: int, text: str, q_type: str, options: list[str], correct: str, points: int, difficulty: str, explanation: str):
+    return rows
+
+
+def update_question(
+    question_id: int,
+    text: str,
+    q_type: str,
+    options: list[str],
+    correct: str,
+    points: int,
+    difficulty: str,
+    explanation: str
+):
     conn = get_conn()
     cur = conn.cursor()
 

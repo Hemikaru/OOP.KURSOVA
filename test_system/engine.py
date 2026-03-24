@@ -7,13 +7,17 @@ class TestRunner(ABC):
         start_time = time.time()
 
         score = 0
+        total = 0
+
         for question in questions:
+            total += question.points
             answer = self.ask(question)
+
             if self.check(question, answer):
-                score += 1
+                score += question.points
 
         duration = int(time.time() - start_time)
-        self.finish(score, len(questions), duration)
+        self.finish(score, total, duration)
 
     @abstractmethod
     def ask(self, question):
